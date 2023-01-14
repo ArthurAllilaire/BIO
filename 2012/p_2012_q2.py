@@ -38,12 +38,22 @@ class Rail:
         for j in juncs:
             self.stations[j].set_flips(True)
 
+    def reset(self):
+        for j in self.junctions:
+            j.p1 = 0
+            j.lazy = True
+        return True 
+
+    def move(self, start):
+        """Returns the just the next junction and updates the state of the Rail"""
+        pass
     def run_sim(self, start, n_steps):
         #First go through start one
         s = self.stations[start[1]].next_stop(start[0])
         past = start[1]
         for _ in range(n_steps-1):
             #Need the past station as well
+            #print(past,s)# for 2b
             s=self.stations[s]
             temp = s.name
             s=s.next_stop(past)
@@ -51,18 +61,40 @@ class Rail:
         
         return past+s
 
+    def get_safety(self):
+        starts = set()
+        for j in self.junctions:
+            starts.add(j.name+j.up)
+            for i in range(2):
+                starts.add(j.name+j.down[i])
+        total = 0
+        moves = 100
+        #starts = {'AD', 'EA', 'TK'}
+        for i in starts:
+            for j in starts:
+                self.reset()
+                add = True
+                n_i = i
+                n_j = j
+                for _ in range(moves):
+                    if n_i[1]==n_j[1] or (n_i[0] == n_j[1] and n_i[1]==n_j[0]):
+                        add = False
+                        break
+                    n_i = self.run_sim(n_i,1)
+                    n_j = self.run_sim(n_j,1)
+                if add:
+                    total += 1
 
+        return total
+
+
+        #Stop if they have the same junction (or they have just switched junciton (used to be A now D ad vice versa))
 
     def __str__(self) -> str:
         result = ""
         for i in self.junctions:
             print(i)
         return result
-
-
-
-
-        #{Junction("A","E","F","D"), Junction("E","M","N","A"), Junction("F", "N","O","A"), Junction("G", "O","P","B"), Junction("B", "G","H","C")}
 
 class Junction:
     def __init__(self, name, left, right, straight) -> None:
@@ -97,10 +129,20 @@ class Junction:
     def __str__(self) -> str:
         return f"{self.up} - {self.name} - {self.down[0]} or {self.down[1]}"
 
-# R = Rail()
-# R.add_flips("GHIJKL")
-# print(R.run_sim("AE",100))
+#2B -> V->U U->M M->L L->D D->A A->E E->M M->U U->V V->P 
+#R = Rail()
+#R.add_flips("GHIJKL")
+#print(R.run_sim("PV",100))
+#
 
+#2c
+"""
+There is no way to narrow it down to a single station, just find the pattern as to which level it will be on, 10**18 is divisible by 8 so same position as stratin (in terms of row and facing)
+"""
+#2d
+# R = Rail()
+# total = R.get_safety()
+# print(total)
 import unittest
 class TestRail(unittest.TestCase):
     def setUp(self):
@@ -122,5 +164,5 @@ class TestRail(unittest.TestCase):
             print(end, result)
             assert(end == result)
 
-if __name__ == "__main__":
-    unittest.main()
+# if __name__ == "__main__":
+#     unittest.main()
